@@ -30,6 +30,7 @@
 @property (weak, nonatomic) IBOutlet UITableView *tableView;
 @property (strong, nonatomic) NSMutableArray *items;
 @property (strong, nonatomic) CMAltimeter *altimeter;
+@property (strong, nonatomic) NSNumber *finalAltitude;
 
 @end
 
@@ -52,11 +53,13 @@
         __weak typeof(self)weakSelf = self;
         
         [self.altimeter startRelativeAltitudeUpdatesToQueue:[NSOperationQueue mainQueue] withHandler:^(CMAltitudeData *altitudeData, NSError *error) {
-            AltitudeDataItem *dataItem = [AltitudeDataItem dataItemWithAltitudeData:altitudeData error:error];
             typeof(weakSelf) strongSelf = weakSelf;
+            AltitudeDataItem *dataItem = [AltitudeDataItem dataItemWithAltitudeData:altitudeData error:error];
+            [strongSelf.items addObject:dataItem];
+            strongSelf.finalAltitude = @([strongSelf.finalAltitude floatValue] + [altitudeData.relativeAltitude floatValue]);
             
             dispatch_async(dispatch_get_main_queue(), ^(void) {
-                [strongSelf.items addObject:dataItem];
+                strongSelf.title = strongSelf.finalAltitude.description;
                 NSIndexPath *newRow = [NSIndexPath indexPathForRow:strongSelf.items.count-1 inSection:0];
                 [strongSelf.tableView beginUpdates];
                 [strongSelf.tableView insertRowsAtIndexPaths:@[newRow] withRowAnimation:UITableViewRowAnimationAutomatic];
